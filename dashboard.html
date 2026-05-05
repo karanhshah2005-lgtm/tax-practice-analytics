@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tax Practice Analytics — Ottawa, ON</title>
+
+<!-- Open Graph / LinkedIn / Twitter card -->
+<!-- After deploying, replace YOUR-USERNAME with your GitHub handle -->
+<meta property="og:title" content="Tax Practice Analytics" />
+<meta property="og:description" content="Three years of filings, on one page. SQL + Plotly analytics layer over a Canadian tax practice — 38 clients, 86 returns, 17 named queries." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://YOUR-USERNAME.github.io/tax-practice-analytics/" />
+<meta property="og:image" content="https://YOUR-USERNAME.github.io/tax-practice-analytics/preview.png" />
+<meta property="og:image:width" content="1280" />
+<meta property="og:image:height" content="640" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Tax Practice Analytics" />
+<meta name="twitter:description" content="SQL + Plotly analytics over a Canadian tax practice — 38 clients, 86 returns, 17 named queries." />
+<meta name="twitter:image" content="https://YOUR-USERNAME.github.io/tax-practice-analytics/preview.png" />
+<meta name="description" content="Interactive analytics dashboard for a Canadian individual tax practice. Built with SQLite, Python, and Plotly. Synthetic data, production-quality logic." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<style>
+  :root {
+    --bg:           #FAF7F2;
+    --bg-card:      #FFFFFF;
+    --bg-callout:   #F2EBDD;
+    --border:       #E5DECF;
+    --border-soft:  #EFEAE0;
+    --rule:         #1A1A1A;
+
+    --text:         #1A1A1A;
+    --text-muted:   #6B6B6B;
+    --text-soft:    #8A8A8A;
+
+    --accent:       #1F4D43;     /* deep petrol */
+    --accent-light: #4A7B70;
+    --amber:        #B8742F;     /* opportunity/warning */
+    --negative:     #8B2E2E;
+    --positive:     #1F4D43;
+
+    --serif:        'Fraunces', 'Times New Roman', serif;
+    --sans:         'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono:         'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 48px 96px;
+  }
+
+  /* ============== MASTHEAD ============== */
+  .masthead {
+    border-top: 4px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 32px 0 28px;
+    margin-bottom: 48px;
+  }
+  .masthead .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    margin: 0 0 20px;
+    font-variation-settings: 'opsz' 144;
+  }
+  .masthead h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+  }
+  .masthead .deck {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 19px;
+    line-height: 1.45;
+    color: var(--text-muted);
+    max-width: 720px;
+    font-variation-settings: 'opsz' 36;
+  }
+  .masthead .meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 32px;
+    font-size: 12px;
+    color: var(--text-soft);
+    font-family: var(--mono);
+  }
+  .masthead .meta span b {
+    color: var(--text);
+    font-weight: 500;
+    margin-right: 6px;
+  }
+
+  /* ============== SECTIONS ============== */
+  .section { margin-bottom: 56px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-soft);
+    letter-spacing: 0.05em;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .section-sub {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-left: auto;
+  }
+
+  /* ============== KPI ROW ============== */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .kpi {
+    padding: 20px 22px;
+    border-right: 1px solid var(--border-soft);
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .kpi-value .unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 3px;
+  }
+  .kpi-foot {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+  .kpi-foot.up    { color: var(--positive); }
+  .kpi-foot.down  { color: var(--negative); }
+
+  /* ============== GRID LAYOUT ============== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+  }
+  .card.callout {
+    background: var(--bg-callout);
+    border-color: var(--amber);
+    border-left: 3px solid var(--amber);
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0;
+  }
+  .card-meta {
+    font-size: 11px;
+    color: var(--text-soft);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+  .card-note {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 14px;
+    line-height: 1.4;
+  }
+
+  .span-4  { grid-column: span 4; }
+  .span-5  { grid-column: span 5; }
+  .span-6  { grid-column: span 6; }
+  .span-7  { grid-column: span 7; }
+  .span-8  { grid-column: span 8; }
+  .span-12 { grid-column: span 12; }
+
+  .chart { width: 100%; min-height: 280px; }
+  .chart.tall { min-height: 360px; }
+
+  /* ============== TABLES ============== */
+  table.dt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+  table.dt th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.dt td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text);
+  }
+  table.dt tbody tr:hover { background: rgba(31,77,67,0.04); }
+  table.dt td.num { text-align: right; }
+  table.dt td.muted { color: var(--text-muted); }
+  table.dt td.amber { color: var(--amber); font-weight: 600; }
+  table.dt td.neg { color: var(--negative); }
+
+  /* ============== INLINE BARS ============== */
+  .bar-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .bar-row:last-child { border-bottom: none; }
+  .bar-row .label { color: var(--text); }
+  .bar-row .bar {
+    height: 8px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+  .bar-row .bar.amber { background: var(--amber); }
+  .bar-row .val {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ============== FOOTER ============== */
+  .colophon {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .colophon strong {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .colophon .stack {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-soft);
+    letter-spacing: 0.04em;
+  }
+
+  /* dropcap for the deck */
+  .deck::first-letter {
+    font-family: var(--serif);
+    font-size: 56px;
+    line-height: 1;
+    float: left;
+    margin: 4px 8px 0 0;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  @media (max-width: 900px) {
+    .page { padding: 32px 20px; }
+    .masthead h1 { font-size: 42px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .kpi { border-right: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+    .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ============== MASTHEAD ============== -->
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Tax Practice Analytics · Internal · Anonymized</span>
+      <span id="dateline"></span>
+    </div>
+    <h1>Three years of <em>filings,</em> on one page.</h1>
+    <p class="deck">A look across 38 clients and 86 returns prepared between
+      tax years 2022 and 2024 — what the practice earns, where the workload
+      lives, which deductions clients lean on, and which planning conversations
+      have been left on the table.</p>
+    <div class="meta">
+      <span><b>Scope</b> 38 clients · 86 returns · 3 tax years</span>
+      <span><b>Source</b> tax_practice.db (synthetic)</span>
+      <span><b>Engine</b> SQLite + Plotly</span>
+    </div>
+  </header>
+
+  <!-- ============== HEADLINE KPIs ============== -->
+  <section class="section">
+    <div class="kpi-row" id="kpi-row"></div>
+  </section>
+
+  <!-- ============== 01 GROWTH ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Practice growth</h2>
+      <span class="section-sub">Returns filed and revenue earned, year by year.</span>
+    </div>
+    <div class="grid">
+      <div class="card span-7">
+        <div class="card-head">
+          <h3 class="card-title">Revenue & returns, FY2022 — FY2024</h3>
+          <span class="card-meta">CAD · prep fees</span>
+        </div>
+        <p class="card-note">Returns nearly doubled in 2023 as the practice scaled, then growth tapered to ~23% in 2024 — but average fee climbed 12% as the mix shifted toward more complex returns.</p>
+        <div id="chart-yoy" class="chart tall"></div>
+      </div>
+      <div class="card span-5">
+        <div class="card-head">
+          <h3 class="card-title">Cohort retention</h3>
+          <span class="card-meta">% retained by acquisition year</span>
+        </div>
+        <p class="card-note">Each row is an acquisition cohort. Reading right tracks how many of that cohort came back to file in subsequent years.</p>
+        <div id="chart-retention" class="chart tall"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 02 CLIENT BASE ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Who the clients are</h2>
+      <span class="section-sub">Demographics, geography, and how they found us.</span>
+    </div>
+    <div class="grid">
+      <div class="card span-4">
+        <div class="card-head"><h3 class="card-title">Age band</h3></div>
+        <div id="chart-age" class="chart"></div>
+      </div>
+      <div class="card span-4">
+        <div class="card-head"><h3 class="card-title">Province</h3></div>
+        <div id="chart-province" class="chart"></div>
+      </div>
+      <div class="card span-4">
+        <div class="card-head"><h3 class="card-title">Acquisition channel</h3>
+        <span class="card-meta">revenue per client</span></div>
+        <div id="bars-referral"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 03 INCOME ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Income profile</h2>
+      <span class="section-sub">What the book of clients actually earns — and from where.</span>
+    </div>
+    <div class="grid">
+      <div class="card span-7">
+        <div class="card-head">
+          <h3 class="card-title">Income distribution by tax year</h3>
+          <span class="card-meta">P25 · median · P75</span>
+        </div>
+        <p class="card-note">The median client earns just under six figures. Spread is widening year-over-year as the book picks up more high-income self-employed work.</p>
+        <div id="chart-income-dist" class="chart tall"></div>
+      </div>
+      <div class="card span-5">
+        <div class="card-head">
+          <h3 class="card-title">Income source mix</h3>
+          <span class="card-meta">% of returns w/ each slip</span>
+        </div>
+        <p class="card-note">T4 is universal. T5 / T3 investment slips appear on roughly a third of returns — those are the clients to flag for carrying-charge and capital-gains conversations.</p>
+        <div id="bars-slips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 04 DEDUCTIONS / CREDITS ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">What clients claim</h2>
+      <span class="section-sub">The deductions and credits driving refunds.</span>
+    </div>
+    <div class="grid">
+      <div class="card span-6">
+        <div class="card-head">
+          <h3 class="card-title">Deductions, by total $ claimed</h3>
+          <span class="card-meta">3-year aggregate</span>
+        </div>
+        <p class="card-note">Business expenses dominate gross dollars (driven by self-employed clients), but RRSP is the most-claimed by frequency — present on roughly half of all returns.</p>
+        <div id="bars-ded"></div>
+      </div>
+      <div class="card span-6">
+        <div class="card-head">
+          <h3 class="card-title">Credits, by total $ claimed</h3>
+          <span class="card-meta">refundable + non-refundable</span>
+        </div>
+        <p class="card-note">CCB and the basic personal amount carry most of the dollar weight. Charitable and medical credits show up frequently but in smaller increments.</p>
+        <div id="bars-credit"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 05 OPERATIONS ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Operations & pricing</h2>
+      <span class="section-sub">Where the time goes, and whether the price is right.</span>
+    </div>
+    <div class="grid">
+      <div class="card span-6">
+        <div class="card-head">
+          <h3 class="card-title">Fee vs. complexity</h3>
+          <span class="card-meta">avg fee · effective hourly</span>
+        </div>
+        <p class="card-note">Effective hourly rate climbs with complexity tier — pricing rewards harder work — but the gap between Tier 4 and Tier 5 narrows, suggesting the most complex returns are slightly under-priced.</p>
+        <div id="chart-complexity" class="chart"></div>
+      </div>
+      <div class="card span-6">
+        <div class="card-head">
+          <h3 class="card-title">Filing timeliness, by occupation</h3>
+          <span class="card-meta">% on-time / late / extension</span>
+        </div>
+        <p class="card-note">Self-employed clients miss the April 30 deadline most often (they have until June 15, but balances accrue interest from May). A pre-deadline reminder workflow could trim the tail.</p>
+        <div id="chart-timeliness" class="chart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 06 OPPORTUNITIES ============== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Planning opportunities</h2>
+      <span class="section-sub">Conversations the data says are worth having.</span>
+    </div>
+    <div class="grid">
+      <div class="card callout span-7">
+        <div class="card-head">
+          <h3 class="card-title">Clients with material RRSP headroom (TY2024)</h3>
+          <span class="card-meta">income &gt; $70K · contributed &lt; $1K</span>
+        </div>
+        <p class="card-note">A short list of clients who could meaningfully reduce their tax bill with a deliberate RRSP conversation before the March 1 deadline. Estimated savings assume contribution to 10% of income at the client's marginal rate.</p>
+        <table class="dt" id="tbl-rrsp"></table>
+      </div>
+      <div class="card span-5">
+        <div class="card-head">
+          <h3 class="card-title">Largest balances owing</h3>
+          <span class="card-meta">all years · top 8</span>
+        </div>
+        <p class="card-note">Self-employed clients dominate this list — natural candidates for quarterly installment planning to smooth cash flow and avoid late-payment interest.</p>
+        <table class="dt" id="tbl-owing"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== COLOPHON ============== -->
+  <footer class="colophon">
+    <strong>About this report.</strong> All client identifiers, demographics, and amounts in this dashboard are <em>synthetic</em> — generated procedurally with seeded randomness to model the distribution and complexity of a real Canadian individual tax practice without exposing any client information. The schema, queries, and dashboard logic are production-quality; only the data is fabricated.
+    <div class="stack">SCHEMA · 5 tables · 12 indexes &nbsp;·&nbsp; QUERIES · 17 named analyses &nbsp;·&nbsp; STACK · SQLite, Python, Plotly &nbsp;·&nbsp; BUILT BY · KARAN</div>
+  </footer>
+</div>
+
+<script>
+window.__DATA__ = {"practice_kpis": {"columns": ["lifetime_clients", "total_returns", "lifetime_revenue", "avg_fee_per_return", "avg_complexity", "avg_refund", "avg_minutes", "effective_hourly_rate"], "rows": [[38, 86, 14018.43, 163.0, 2.09, 191.19, 93.0, 104.8]]}, "yoy_growth": {"columns": ["tax_year", "clients_served", "returns_filed", "revenue", "avg_fee", "avg_complexity", "revenue_growth_pct", "client_growth_pct"], "rows": [[2022, 17, 17, 2689.47, 158.2, 2.12, null, null], [2023, 31, 31, 4767.4, 153.79, 2.0, 77.3, 82.4], [2024, 38, 38, 6561.56, 172.67, 2.16, 37.6, 22.6]]}, "income_distribution": {"columns": ["tax_year", "min_income", "p25", "median", "p75", "max_income", "mean_income"], "rows": [[2022, 16784.0, 46278.0, 71372.0, 102329.0, 268599.0, 88446.0], [2023, 22945.0, 46792.0, 70352.0, 115425.0, 232188.0, 87617.0], [2024, 18688.0, 47708.0, 85000.0, 125162.0, 283464.0, 93078.0]]}, "top_deductions": {"columns": ["deduction_type", "returns_with_claim", "claim_rate_pct", "avg_amount", "total_claimed"], "rows": [["BusinessExpenses", 20, 23.3, 28735.23, 574704.55], ["RRSP", 41, 47.7, 9511.8, 389983.75], ["ChildCare", 18, 20.9, 4623.04, 83214.68], ["RentalExpenses", 8, 9.3, 9878.42, 79027.36], ["UnionDues", 22, 25.6, 1034.77, 22765.0], ["EmploymentExpenses", 6, 7.0, 3015.04, 18090.22], ["Moving", 4, 4.7, 3844.82, 15379.28], ["CapLossCarry", 2, 2.3, 3674.47, 7348.94], ["CarryingCharges", 11, 12.8, 359.3, 3952.25]]}, "top_credits": {"columns": ["credit_type", "kind", "returns_with_claim", "claim_rate_pct", "avg_amount", "total_claimed"], "rows": [["BasicPersonal", "non-refundable", 86, 100.0, 15000.0, 1290000.0], ["Spousal", "non-refundable", 16, 18.6, 9687.62, 155001.95], ["CCB", "refundable", 21, 24.4, 5879.55, 123470.61], ["MedicalExpenses", "non-refundable", 30, 34.9, 3496.23, 104886.92], ["AgeAmount", "non-refundable", 12, 14.0, 6210.59, 74527.13], ["Charitable", "non-refundable", 50, 58.1, 1174.47, 58723.26], ["DisabilityAmount", "non-refundable", 6, 7.0, 8441.13, 50646.76], ["HomeBuyers", "non-refundable", 5, 5.8, 10000.0, 50000.0], ["EligibleDependant", "non-refundable", 5, 5.8, 9779.61, 48898.07], ["Tuition", "non-refundable", 5, 5.8, 8711.22, 43556.08], ["GST_HST", "refundable", 16, 18.6, 440.88, 7054.05], ["CanadaWorkersBenefit", "refundable", 6, 7.0, 980.25, 5881.48]]}, "slip_type_mix": {"columns": ["slip_type", "returns_with_slip", "avg_amount", "total_amount"], "rows": [["T4", 56, 60169.52, 3971188.05], ["T5", 29, 4626.03, 134154.79], ["T2125", 20, 126752.38, 2535047.65], ["T4A(OAS)", 19, 7579.66, 144013.48], ["T4A(P)", 19, 12930.74, 245684.07], ["CapitalGains", 13, 17277.08, 224602.07], ["T3", 12, 6540.26, 78483.16], ["T4A", 12, 23913.1, 286957.25], ["Rental", 8, 17064.64, 136517.1]]}, "self_employment_growth": {"columns": ["tax_year", "total_returns", "se_returns", "se_share_pct"], "rows": [[2022, 17, 4, 23.5], [2023, 31, 8, 25.8], [2024, 38, 8, 21.1]]}, "filing_timeliness": {"columns": ["occupation_category", "returns", "on_time", "late", "extension", "late_pct"], "rows": [["retired", 19, 13, 6, 0, 31.6], ["employed", 41, 34, 6, 1, 14.6], ["self_employed", 11, 9, 1, 1, 9.1], ["mixed", 12, 11, 1, 0, 8.3], ["student", 3, 3, 0, 0, 0.0]]}, "complexity_vs_fee": {"columns": ["complexity_score", "returns", "avg_fee", "min_fee", "max_fee", "avg_minutes", "effective_hourly"], "rows": [[1, 27, 97.54, 91.14, 106.73, 57.0, 102.88], [2, 37, 150.68, 129.53, 171.56, 92.0, 98.62], [3, 10, 207.69, 189.05, 234.38, 129.0, 96.83], [4, 11, 304.84, 270.27, 334.34, 149.0, 123.13], [5, 1, 379.4, 379.4, 379.4, 177.0, 128.61]]}, "client_retention": {"columns": ["cohort", "cohort_size", "tax_year", "active_clients", "retention_pct"], "rows": [[2021, 2, 2022, 2, 100.0], [2021, 2, 2023, 2, 100.0], [2021, 2, 2024, 2, 100.0], [2022, 15, 2022, 15, 100.0], [2022, 15, 2023, 15, 100.0], [2022, 15, 2024, 15, 100.0], [2023, 14, 2023, 14, 100.0], [2023, 14, 2024, 14, 100.0], [2024, 7, 2024, 7, 100.0]]}, "referral_source_value": {"columns": ["referral_source", "clients", "returns_filed", "lifetime_revenue", "avg_fee_per_return", "revenue_per_client"], "rows": [["family", 12, 32, 5523.3, 172.6, 460.28], ["friend", 8, 22, 3281.63, 149.16, 410.2], ["returning", 3, 7, 1014.45, 144.92, 338.15], ["walk_in", 5, 9, 1624.44, 180.49, 324.89], ["google", 7, 11, 1927.31, 175.21, 275.33], ["social_media", 3, 5, 647.3, 129.46, 215.77]]}, "demographic_mix": {"columns": ["age_band", "clients"], "rows": [["25-34", 9], ["35-44", 7], ["45-54", 6], ["55-64", 8], ["65+", 5], ["<25", 3]]}, "province_mix": {"columns": ["province", "clients"], "rows": [["ON", 23], ["MB", 8], ["BC", 3], ["AB", 2], ["QC", 1], ["NS", 1]]}, "refund_distribution_by_occupation": {"columns": ["occupation_category", "returns", "avg_refund_or_owing", "refund_count", "owing_count", "refund_rate_pct"], "rows": [["retired", 19, 3013.73, 18, 1, 94.7], ["employed", 41, 2419.42, 36, 5, 87.8], ["student", 3, 197.22, 2, 1, 66.7], ["mixed", 12, -4024.5, 4, 8, 33.3], ["self_employed", 11, -8392.01, 0, 11, 0.0]]}, "missed_rrsp_opportunity": {"columns": ["client_id", "tax_year", "total_income", "tax_paid", "rrsp_contributed", "potential_savings_at_10pct"], "rows": [["C-0030", 2024, 88479.0, 17320.0, 0, 2654.0], ["C-0028", 2024, 80744.0, 15140.0, 0, 2422.0], ["C-0002", 2024, 79906.0, 14712.0, 0, 2397.0]]}, "top_balances_owing": {"columns": ["client_id", "tax_year", "occupation_category", "total_income", "balance_owing"], "rows": [["C-0009", 2024, "self_employed", 187218.0, -21239.0], ["C-0035", 2022, "self_employed", 168209.0, -15072.0], ["C-0006", 2024, "mixed", 231703.0, -15050.0], ["C-0014", 2023, "mixed", 232188.0, -13662.0], ["C-0014", 2022, "mixed", 268599.0, -13567.0], ["C-0015", 2024, "self_employed", 174147.0, -12288.0], ["C-0015", 2022, "self_employed", 145597.0, -11872.0], ["C-0035", 2023, "self_employed", 129807.0, -11554.0], ["C-0006", 2023, "mixed", 136043.0, -6490.0], ["C-0035", 2024, "self_employed", 124964.0, -5659.0]]}, "fee_realization_by_complexity": {"columns": ["complexity_score", "returns", "avg_fee", "avg_minutes", "effective_hourly_rate"], "rows": [[1, 27, 97.54, 57.0, 104.46], [2, 37, 150.68, 92.0, 102.09], [3, 10, 207.69, 129.0, 98.4], [4, 11, 304.84, 149.0, 128.12], [5, 1, 379.4, 177.0, 128.61]]}};
+
+// ====== shared theme ======
+const THEME = {
+  font: 'Plus Jakarta Sans, system-ui, sans-serif',
+  textColor: '#1A1A1A',
+  mutedColor: '#6B6B6B',
+  accent: '#1F4D43',
+  accentLight: '#4A7B70',
+  amber: '#B8742F',
+  amberLight: '#D49E63',
+  negative: '#8B2E2E',
+  border: '#E5DECF',
+  bg: '#FAF7F2'
+};
+
+const baseLayout = {
+  font: { family: THEME.font, color: THEME.textColor, size: 12 },
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  margin: { l: 50, r: 20, t: 10, b: 40 },
+  xaxis: { gridcolor: '#EFEAE0', linecolor: THEME.border, zerolinecolor: THEME.border, tickfont: {size: 11, color: THEME.mutedColor} },
+  yaxis: { gridcolor: '#EFEAE0', linecolor: THEME.border, zerolinecolor: THEME.border, tickfont: {size: 11, color: THEME.mutedColor} },
+  showlegend: false,
+  hoverlabel: { font: { family: THEME.font }, bgcolor: '#FFFFFF', bordercolor: THEME.border }
+};
+const PLOTLY_CFG = { displayModeBar: false, responsive: true };
+
+const cad = v => '$' + Math.round(v).toLocaleString('en-CA');
+const pct = v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+
+// reshape helper: rows + columns -> array of objects
+function toObjects(query) {
+  if (!query || !query.rows) return [];
+  return query.rows.map(r => Object.fromEntries(query.columns.map((c,i) => [c, r[i]])));
+}
+
+// ====== render once data is ready ======
+document.addEventListener('DOMContentLoaded', () => {
+  const D = window.__DATA__;
+  document.getElementById('dateline').textContent =
+    'Compiled ' + new Date().toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' });
+
+  renderKPIs(D);
+  renderYoY(D);
+  renderRetention(D);
+  renderAge(D);
+  renderProvince(D);
+  renderReferral(D);
+  renderIncomeDist(D);
+  renderSlips(D);
+  renderDeductions(D);
+  renderCredits(D);
+  renderComplexity(D);
+  renderTimeliness(D);
+  renderRRSPTable(D);
+  renderOwingTable(D);
+});
+
+// ----- KPI ROW -----
+function renderKPIs(D) {
+  const k = toObjects(D.practice_kpis)[0];
+  const yoy = toObjects(D.yoy_growth);
+  const latest = yoy[yoy.length - 1] || {};
+  const prior  = yoy[yoy.length - 2] || {};
+  const revGrowth = latest.revenue_growth_pct;
+  const clientGrowth = latest.client_growth_pct;
+
+  const kpis = [
+    { label: 'Lifetime Clients', val: k.lifetime_clients, foot: '38 active in TY2024' },
+    { label: 'Returns Filed', val: k.total_returns, foot: 'Across 3 tax years' },
+    { label: 'Lifetime Revenue', val: cad(k.lifetime_revenue), foot: '+' + (revGrowth ?? 0).toFixed(0) + '% YoY in TY24', footCls: 'up' },
+    { label: 'Avg Fee / Return', val: cad(k.avg_fee_per_return), foot: 'TY24 avg: ' + cad(latest.avg_fee || 0), footCls: 'up' },
+    { label: 'Effective Hourly', val: '$' + k.effective_hourly_rate.toFixed(0) + '/hr', foot: 'Avg ' + k.avg_minutes + ' min/return' },
+    { label: 'Avg Refund', val: cad(k.avg_refund), foot: 'Across all returns' }
+  ];
+  document.getElementById('kpi-row').innerHTML = kpis.map(x => `
+    <div class="kpi">
+      <div class="kpi-label">${x.label}</div>
+      <div class="kpi-value">${x.val}</div>
+      <div class="kpi-foot ${x.footCls || ''}">${x.foot}</div>
+    </div>
+  `).join('');
+}
+
+// ----- YoY combined chart -----
+function renderYoY(D) {
+  const rows = toObjects(D.yoy_growth);
+  const x = rows.map(r => 'TY' + r.tax_year);
+  Plotly.newPlot('chart-yoy', [
+    {
+      type: 'bar', name: 'Returns filed', x: x, y: rows.map(r => r.returns_filed),
+      yaxis: 'y2',
+      marker: { color: THEME.accentLight, opacity: 0.55 },
+      hovertemplate: '<b>%{x}</b><br>Returns: %{y}<extra></extra>'
+    },
+    {
+      type: 'scatter', mode: 'lines+markers+text', name: 'Revenue',
+      x: x, y: rows.map(r => r.revenue),
+      line: { color: THEME.accent, width: 3 },
+      marker: { size: 9, color: THEME.accent },
+      text: rows.map(r => cad(r.revenue)),
+      textposition: 'top center',
+      textfont: { family: THEME.font, size: 12, color: THEME.accent },
+      hovertemplate: '<b>%{x}</b><br>Revenue: %{y:$,.0f}<extra></extra>'
+    }
+  ], {
+    ...baseLayout,
+    margin: { l: 60, r: 60, t: 30, b: 50 },
+    yaxis: { ...baseLayout.yaxis, title: { text: 'Revenue (CAD)', font: {size: 11, color: THEME.mutedColor} } },
+    yaxis2: {
+      overlaying: 'y', side: 'right',
+      title: { text: 'Returns', font: {size: 11, color: THEME.mutedColor} },
+      gridcolor: 'rgba(0,0,0,0)', tickfont: {size: 11, color: THEME.mutedColor}
+    },
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.2, font: {size: 11} }
+  }, PLOTLY_CFG);
+}
+
+// ----- Cohort retention heatmap -----
+function renderRetention(D) {
+  const rows = toObjects(D.client_retention);
+  const cohorts = [...new Set(rows.map(r => r.cohort))].sort();
+  const years   = [...new Set(rows.map(r => r.tax_year))].sort();
+  const z = cohorts.map(c =>
+    years.map(y => {
+      const m = rows.find(r => r.cohort === c && r.tax_year === y);
+      return m ? m.retention_pct : null;
+    })
+  );
+  const text = cohorts.map(c =>
+    years.map(y => {
+      const m = rows.find(r => r.cohort === c && r.tax_year === y);
+      return m ? m.retention_pct + '%' : '';
+    })
+  );
+  Plotly.newPlot('chart-retention', [{
+    type: 'heatmap',
+    z, x: years.map(y => 'TY' + y),
+    y: cohorts.map(c => 'Joined ' + c),
+    text, texttemplate: '%{text}', textfont: { family: THEME.font, size: 12 },
+    colorscale: [[0, '#FAF7F2'], [0.5, '#9DBDB5'], [1, THEME.accent]],
+    showscale: false,
+    hovertemplate: '<b>%{y}</b> in %{x}<br>%{text} retention<extra></extra>',
+    xgap: 2, ygap: 2
+  }], {
+    ...baseLayout,
+    margin: { l: 100, r: 20, t: 10, b: 40 },
+    yaxis: { ...baseLayout.yaxis, autorange: 'reversed' }
+  }, PLOTLY_CFG);
+}
+
+// ----- Demographic donuts -----
+function renderAge(D) {
+  const rows = toObjects(D.demographic_mix);
+  Plotly.newPlot('chart-age', [{
+    type: 'pie', labels: rows.map(r => r.age_band), values: rows.map(r => r.clients),
+    hole: 0.55, sort: false,
+    marker: { colors: ['#A6BFBA','#7FA39C','#5A877E','#3D6E63','#1F4D43','#15362F'],
+              line: {color: '#FAF7F2', width: 2} },
+    textinfo: 'label+percent',
+    textfont: { family: THEME.font, size: 11, color: THEME.textColor },
+    hovertemplate: '<b>%{label}</b><br>%{value} clients (%{percent})<extra></extra>'
+  }], {
+    ...baseLayout,
+    margin: { l: 0, r: 0, t: 0, b: 0 },
+    annotations: [{ text: '<b>38</b><br>clients', font: {family: THEME.font, size: 14}, showarrow: false }]
+  }, PLOTLY_CFG);
+}
+
+function renderProvince(D) {
+  const rows = toObjects(D.province_mix);
+  Plotly.newPlot('chart-province', [{
+    type: 'bar', orientation: 'h',
+    x: rows.map(r => r.clients).reverse(),
+    y: rows.map(r => r.province).reverse(),
+    marker: { color: THEME.accent },
+    text: rows.map(r => r.clients).reverse(),
+    textposition: 'outside',
+    textfont: { family: THEME.font, size: 11, color: THEME.textColor },
+    hovertemplate: '<b>%{y}</b>: %{x} clients<extra></extra>'
+  }], {
+    ...baseLayout,
+    margin: { l: 40, r: 40, t: 10, b: 30 },
+    xaxis: { ...baseLayout.xaxis, showticklabels: false, gridcolor: 'rgba(0,0,0,0)' }
+  }, PLOTLY_CFG);
+}
+
+function renderReferral(D) {
+  const rows = toObjects(D.referral_source_value).sort((a,b) => b.revenue_per_client - a.revenue_per_client);
+  const max = Math.max(...rows.map(r => r.revenue_per_client));
+  document.getElementById('bars-referral').innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <span class="label">${r.referral_source.replace(/_/g, ' ')}</span>
+      <span class="bar" style="width:${(r.revenue_per_client / max * 100).toFixed(1)}%"></span>
+      <span class="val">${cad(r.revenue_per_client)}</span>
+    </div>
+  `).join('');
+}
+
+// ----- Income distribution -----
+function renderIncomeDist(D) {
+  const rows = toObjects(D.income_distribution);
+  const x = rows.map(r => 'TY' + r.tax_year);
+  Plotly.newPlot('chart-income-dist', [
+    { type: 'bar', name: 'P25–P75', x: x,
+      y: rows.map(r => r.p75 - r.p25), base: rows.map(r => r.p25),
+      marker: { color: THEME.accentLight, opacity: 0.65 },
+      hovertemplate: '<b>%{x}</b><br>P25: $%{base:,.0f}<br>P75: $%{customdata:,.0f}<extra></extra>',
+      customdata: rows.map(r => r.p75) },
+    { type: 'scatter', mode: 'markers+text', name: 'Median',
+      x: x, y: rows.map(r => r.median),
+      marker: { color: THEME.accent, size: 14, symbol: 'diamond', line: {color: '#FAF7F2', width: 2} },
+      text: rows.map(r => cad(r.median)), textposition: 'middle right',
+      textfont: { family: THEME.font, size: 11, color: THEME.accent },
+      hovertemplate: '<b>%{x}</b><br>Median: %{y:$,.0f}<extra></extra>' },
+    { type: 'scatter', mode: 'markers', name: 'Mean',
+      x: x, y: rows.map(r => r.mean_income),
+      marker: { color: THEME.amber, size: 10, symbol: 'circle' },
+      hovertemplate: '<b>%{x}</b><br>Mean: %{y:$,.0f}<extra></extra>' }
+  ], {
+    ...baseLayout,
+    margin: { l: 70, r: 30, t: 30, b: 40 },
+    yaxis: { ...baseLayout.yaxis, title: { text: 'Total income (CAD)', font: {size: 11, color: THEME.mutedColor} },
+             tickformat: '$,.0f' },
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.18, font: {size: 11} }
+  }, PLOTLY_CFG);
+}
+
+function renderSlips(D) {
+  const rows = toObjects(D.slip_type_mix).sort((a,b) => b.returns_with_slip - a.returns_with_slip);
+  const max = Math.max(...rows.map(r => r.returns_with_slip));
+  const total = D.practice_kpis.rows[0][1];  // total_returns
+  document.getElementById('bars-slips').innerHTML = rows.map(r => {
+    const claimPct = (r.returns_with_slip / total * 100).toFixed(0);
+    return `
+      <div class="bar-row">
+        <span class="label">${r.slip_type}</span>
+        <span class="bar" style="width:${(r.returns_with_slip / max * 100).toFixed(1)}%"></span>
+        <span class="val">${claimPct}% · ${cad(r.avg_amount)} avg</span>
+      </div>`;
+  }).join('');
+}
+
+// ----- Deductions / credits -----
+function renderDeductions(D) {
+  const rows = toObjects(D.top_deductions).slice(0, 8);
+  const max = Math.max(...rows.map(r => r.total_claimed));
+  document.getElementById('bars-ded').innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <span class="label">${r.deduction_type}</span>
+      <span class="bar" style="width:${(r.total_claimed / max * 100).toFixed(1)}%"></span>
+      <span class="val">${cad(r.total_claimed)} · ${r.claim_rate_pct}%</span>
+    </div>
+  `).join('');
+}
+
+function renderCredits(D) {
+  const rows = toObjects(D.top_credits).slice(0, 8);
+  const max = Math.max(...rows.map(r => r.total_claimed));
+  document.getElementById('bars-credit').innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <span class="label">${r.credit_type}</span>
+      <span class="bar ${r.kind === 'refundable' ? 'amber' : ''}" style="width:${(r.total_claimed / max * 100).toFixed(1)}%"></span>
+      <span class="val">${cad(r.total_claimed)} · ${r.claim_rate_pct}%</span>
+    </div>
+  `).join('');
+}
+
+// ----- Complexity vs fee -----
+function renderComplexity(D) {
+  const rows = toObjects(D.fee_realization_by_complexity);
+  Plotly.newPlot('chart-complexity', [
+    { type: 'bar', name: 'Avg fee', x: rows.map(r => 'Tier ' + r.complexity_score),
+      y: rows.map(r => r.avg_fee), marker: { color: THEME.accent },
+      text: rows.map(r => cad(r.avg_fee)), textposition: 'outside',
+      textfont: { family: THEME.font, size: 11, color: THEME.textColor },
+      hovertemplate: '<b>Tier %{x}</b><br>Avg fee: $%{y:,.0f}<br>Returns: ' + 
+                     '<extra></extra>',
+      yaxis: 'y' },
+    { type: 'scatter', mode: 'lines+markers', name: 'Effective hourly',
+      x: rows.map(r => 'Tier ' + r.complexity_score),
+      y: rows.map(r => r.effective_hourly_rate),
+      line: { color: THEME.amber, width: 2.5 },
+      marker: { size: 10, color: THEME.amber },
+      yaxis: 'y2',
+      hovertemplate: '<b>Tier %{x}</b><br>$%{y:,.0f}/hr<extra></extra>' }
+  ], {
+    ...baseLayout,
+    margin: { l: 60, r: 60, t: 30, b: 50 },
+    yaxis: { ...baseLayout.yaxis, title: { text: 'Avg fee (CAD)', font: {size: 11, color: THEME.mutedColor} }, tickformat: '$,.0f' },
+    yaxis2: { overlaying: 'y', side: 'right', title: { text: '$/hr', font: {size: 11, color: THEME.mutedColor} },
+              gridcolor: 'rgba(0,0,0,0)', tickformat: '$,.0f', tickfont: {size: 11, color: THEME.mutedColor} },
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.18, font: {size: 11} }
+  }, PLOTLY_CFG);
+}
+
+// ----- Filing timeliness stacked -----
+function renderTimeliness(D) {
+  const rows = toObjects(D.filing_timeliness);
+  const x = rows.map(r => r.occupation_category.replace(/_/g, ' '));
+  Plotly.newPlot('chart-timeliness', [
+    { type: 'bar', name: 'On time', x, y: rows.map(r => r.on_time),
+      marker: { color: THEME.accent }, hovertemplate: '%{y} on time<extra></extra>' },
+    { type: 'bar', name: 'Extension', x, y: rows.map(r => r.extension),
+      marker: { color: THEME.accentLight }, hovertemplate: '%{y} extension<extra></extra>' },
+    { type: 'bar', name: 'Late', x, y: rows.map(r => r.late),
+      marker: { color: THEME.amber }, hovertemplate: '%{y} late<extra></extra>' }
+  ], {
+    ...baseLayout,
+    barmode: 'stack',
+    margin: { l: 50, r: 20, t: 30, b: 50 },
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.22, font: {size: 11} }
+  }, PLOTLY_CFG);
+}
+
+// ----- Tables -----
+function renderRRSPTable(D) {
+  const rows = toObjects(D.missed_rrsp_opportunity);
+  document.getElementById('tbl-rrsp').innerHTML = `
+    <thead><tr>
+      <th>Client</th><th>Year</th><th class="num">Income</th>
+      <th class="num">Tax paid</th><th class="num">RRSP</th><th class="num">Est. savings</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `
+      <tr>
+        <td>${r.client_id}</td>
+        <td class="muted">${r.tax_year}</td>
+        <td class="num">${cad(r.total_income)}</td>
+        <td class="num">${cad(r.tax_paid)}</td>
+        <td class="num muted">${cad(r.rrsp_contributed)}</td>
+        <td class="num amber">${cad(r.potential_savings_at_10pct)}</td>
+      </tr>`).join('')}</tbody>`;
+}
+
+function renderOwingTable(D) {
+  const rows = toObjects(D.top_balances_owing).slice(0, 8);
+  document.getElementById('tbl-owing').innerHTML = `
+    <thead><tr>
+      <th>Client</th><th>Year</th><th>Occupation</th>
+      <th class="num">Income</th><th class="num">Owing</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `
+      <tr>
+        <td>${r.client_id}</td>
+        <td class="muted">${r.tax_year}</td>
+        <td class="muted">${r.occupation_category.replace(/_/g, ' ')}</td>
+        <td class="num">${cad(r.total_income)}</td>
+        <td class="num neg">${cad(r.balance_owing)}</td>
+      </tr>`).join('')}</tbody>`;
+}
+</script>
+
+</body>
+</html>

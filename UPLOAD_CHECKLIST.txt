@@ -1,0 +1,36 @@
+UPLOAD CHECKLIST — drag ALL of these to GitHub's upload page
+=============================================================
+
+The unzipped folder contains exactly 17 items. Two of them start with
+a dot, which makes them invisible by default on Mac and Windows.
+
+Mac:     Press Cmd+Shift+.  in Finder to show hidden files
+Windows: View tab → check "Hidden items"
+
+Then select everything (Cmd+A or Ctrl+A) and drag to GitHub.
+
+------------------------------------------------------------
+[ ] .gitignore                  ← hidden on Mac/Windows
+[ ] .nojekyll                   ← hidden on Mac/Windows
+[ ] LICENSE
+[ ] Makefile
+[ ] README.md
+[ ] UPLOAD_CHECKLIST.txt        (this file — you can skip uploading it)
+[ ] dashboard.html
+[ ] dashboard_template.html
+[ ] generate_data.py
+[ ] index.html
+[ ] preview.png
+[ ] preview_card.html
+[ ] queries.sql
+[ ] results.json
+[ ] run_analysis.py
+[ ] schema.sql
+[ ] tax_practice.db
+------------------------------------------------------------
+
+If GitHub's upload page only shows ~14 files after you drag, it means
+the two dotfiles got skipped. Go back and reveal hidden files first.
+
+The .nojekyll file is the most important one — without it, GitHub Pages
+may break some assets.

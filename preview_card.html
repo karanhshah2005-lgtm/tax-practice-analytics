@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    background: #FAF7F2;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #1A1A1A;
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  /* Subtle decorative element — graph paper grid */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(31,77,67,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(31,77,67,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+  }
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6B6B6B;
+    border-top: 4px solid #1A1A1A;
+    padding-top: 14px;
+    width: 360px;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #1F4D43;
+    border: 1px solid #1F4D43;
+    padding: 7px 14px;
+    letter-spacing: 0.06em;
+  }
+
+  .center {
+    position: relative;
+    z-index: 2;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 132px;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    font-variation-settings: 'opsz' 144;
+    margin-bottom: 24px;
+  }
+  h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: #1F4D43;
+  }
+  .deck {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 26px;
+    color: #6B6B6B;
+    max-width: 920px;
+    line-height: 1.4;
+    font-variation-settings: 'opsz' 36;
+  }
+
+  .stats {
+    display: flex;
+    gap: 56px;
+    align-items: flex-end;
+    border-top: 1px solid #1A1A1A;
+    padding-top: 22px;
+    position: relative;
+    z-index: 2;
+  }
+  .stat .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6B6B6B;
+    margin-bottom: 8px;
+  }
+  .stat .value {
+    font-family: 'Fraunces', serif;
+    font-size: 44px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stack {
+    margin-left: auto;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #6B6B6B;
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+  }
+  .stack b { color: #1A1A1A; font-weight: 500; }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <div class="eyebrow">Portfolio Project · Karan Dixit</div>
+    <div class="badge">SQL · Python · Plotly</div>
+  </div>
+
+  <div class="center">
+    <h1>Three years of <em>filings,</em><br/>on one page.</h1>
+    <p class="deck">An analytics layer over a Canadian individual tax practice — schema, queries, and dashboard.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Clients</div>
+      <div class="value">38</div>
+    </div>
+    <div class="stat">
+      <div class="label">Returns</div>
+      <div class="value">86</div>
+    </div>
+    <div class="stat">
+      <div class="label">SQL Queries</div>
+      <div class="value">17</div>
+    </div>
+    <div class="stat">
+      <div class="label">Tax Years</div>
+      <div class="value">3</div>
+    </div>
+    <div class="stack">
+      <b>github.com</b>/karan/<br/>tax-practice-analytics
+    </div>
+  </div>
+
+</body>
+</html>
