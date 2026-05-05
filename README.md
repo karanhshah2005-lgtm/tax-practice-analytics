@@ -6,7 +6,7 @@
 ![Stack](https://img.shields.io/badge/stack-SQLite%20·%20Python%20·%20Plotly-1F4D43)
 ![Data](https://img.shields.io/badge/data-synthetic-B8742F)
 
-**🔗 Live dashboard:** [https://YOUR-USERNAME.github.io/tax-practice-analytics/](https://YOUR-USERNAME.github.io/tax-practice-analytics/)
+**🔗 Live dashboard:** [https://karanhshah2005-lgtm.github.io/tax-practice-analytics/](https://karanhshah2005-lgtm.github.io/tax-practice-analytics/)
 
 ---
 
@@ -161,7 +161,7 @@ After cloning or creating the repo:
 1. Push to GitHub. The repo must be public on the free Pages tier.
 2. In the repo: **Settings → Pages → Source: Deploy from a branch → `main` / root → Save**.
 3. Wait ~30 seconds. Your dashboard is live at `https://<your-username>.github.io/tax-practice-analytics/`.
-4. (Optional) Replace `YOUR-USERNAME` placeholders in `dashboard_template.html` with your handle so LinkedIn link previews resolve, then `make build && git push`.
+4. (Optional) Replace `karanhshah2005-lgtm` placeholders in `dashboard_template.html` with your handle so LinkedIn link previews resolve, then `make build && git push`.
 
 ---
 
